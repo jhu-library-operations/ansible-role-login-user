@@ -1,2 +1,76 @@
 ---
-# tasks file for login-user
+- name: create ssh key for login user
+  shell: >
+    ssh-keygen
+    -t "{{ key_type }}"
+    -b "{{ key_size }}"
+    -f "{{ login_user_key }}"
+    -C "{{ login_user }} @ {{ project }} {{ environ }} key"
+    -N "{{ login_user_passphrase }}"
+  args:
+    chdir: "{{ local_pki_directory }}"
+    creates: "{{ login_user_key }}"
+  delegate_to: 127.0.0.1
+  run_once: true
+  when: "{{ create_login_user_key }}"
+
+- name: gather facts
+  setup:
+  register: facts
+
+- name: report facts
+  debug: var=facts
+
+# NOTE: need this before working with sudoers file, if SELinux is enforcing
+- name: install SELinux management libraries for RedHat family
+  yum: name=libselinux-python state=present
+  when: ansible_os_family == 'RedHat'
+
+- name: install SELinux management libraries for Debian family
+  apt: name=python-selinux state=present
+  when: ansible_os_family == 'Debian'
+  become: true
+
+- name: add login user
+  user:
+    name: "{{ login_user }}"
+  become: true
+
+# give login user sudo
+- block:
+  - name: create temporary sudoers file for login user
+    copy:
+      dest: "/tmp/sudoers_{{ login_user }}.edit"
+      content: "{{ login_user }} ALL=(ALL) NOPASSWD: ALL"
+
+  - name: validate and implement edits
+    copy:
+      src: "/tmp/sudoers_{{ login_user }}.edit"
+      dest: "/etc/sudoers.d/{{ login_user }}"
+      validate: 'visudo -cf %s'
+      remote_src: true
+      mode: "u=r,g=r,o-rwx" #0440
+
+  - name: cleanup temp file
+    file:
+      path: "/tmp/sudoers_{{ login_user }}.edit"
+      state: absent
+
+  become: true
+# ...end block
+
+- name: deploy ssh key for login user
+  authorized_key:
+    user: "{{ login_user }}"
+    # NOTE: presumes local_pki_directory is "~/[directory name]". may not work otherwise
+    key: "{{ lookup('file',  local_pki_directory | replace('~', lookup('env','HOME')) + '/' + login_user_key + '.pub') }}"
+  become: true
+
+- name: add entries to ssh_config
+  blockinfile:
+    dest: "{{ local_pki_directory }}/config"
+    marker: "# {mark} {{ inventory_hostname }} {{ environ }}"
+    block: |
+      {{ item }}
+  with_template: templates/ssh_config.j2
+  delegate_to: 127.0.0.1

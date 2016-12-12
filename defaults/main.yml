@@ -1,2 +1,18 @@
 ---
-# defaults file for login-user
+
+project:                  "anseedble"
+# dev || stage || prod
+environ:                  "dev"
+login_user:               "deploy"
+local_pki_directory:      "~/.ssh"
+
+create_login_user_key:    true
+login_user_key:           "{{ project }}_{{ environ }}"
+login_user_passphrase:    "change me and put me in a vault file"
+# rsa, dsa, ecdsa, or ed25519
+key_type:                 "rsa"
+# key size in bits. e.g. 2048, 4096, or 15360 (15k) for rsa
+# must match type if using ed25519, etc
+key_size:                 4096
+
+create_ssh_config_entry:  true
