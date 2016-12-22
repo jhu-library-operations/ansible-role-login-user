@@ -70,7 +70,5 @@
   blockinfile:
     dest: "{{ local_pki_directory }}/config"
     marker: "# {mark} {{ inventory_hostname }} {{ environ }}"
-    block: |
-      {{ item }}
-  with_template: templates/ssh_config.j2
+    block: "{{ lookup('template', 'ssh_config.j2') }}"
   delegate_to: 127.0.0.1
