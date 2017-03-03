@@ -31,10 +31,19 @@
   when: ansible_os_family == 'Debian'
   become: true
 
+- name: add login user group
+  group:
+    name: "{{ login_group }}"
+    gid:  "{{ login_group_gid | default(omit) }}"
+    state: present
+  become: true
+
 - name: add login user
   user:
     name: "{{ login_user }}"
     shell: "/bin/bash"
+    uid:    "{{ login_user_uid  | default(omit) }}"
+    group:  "{{ login_group  }}"
   become: true
 
 # give login user sudo
