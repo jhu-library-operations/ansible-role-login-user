@@ -45,7 +45,12 @@ User account to be created. Given passwordless sudo and ssh access via ssh key a
 
     local_pki_directory: "~/.ssh"
 
-Location of ssh keys and config file on the control machine.
+Location of ssh config file on the control machine.
+
+
+    project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
+
+Location of ssh keys and vault password file on the control machine.
 
 
     create_login_user_key: true

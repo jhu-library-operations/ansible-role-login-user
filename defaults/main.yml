@@ -5,6 +5,7 @@ project:                  "anseedble"
 environ:                  "dev"
 login_user:               "deploy"
 local_pki_directory:      "~/.ssh"
+project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
 
 create_login_user_key:    true
 login_user_key:           "{{ project }}_{{ environ }}"

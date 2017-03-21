@@ -1,7 +1,7 @@
 Host {{ ansible_fqdn }} {{ ansible_hostname }}
 	Hostname {{ ansible_fqdn }}
 	User {{ login_user }}
-	IdentityFile {{ local_pki_directory }}/{{ login_user_key }}
+	IdentityFile {{ project_pki_subdirectory }}/{{ login_user_key }}
 	PreferredAuthentications publickey
 	IdentitiesOnly yes
 {% if environ == 'dev'  %}

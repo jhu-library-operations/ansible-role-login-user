@@ -8,7 +8,7 @@
     -C "{{ login_user }} @ {{ project }} {{ environ }} key"
     -N "{{ login_user_passphrase }}"
   args:
-    chdir: "{{ local_pki_directory }}"
+    chdir: "{{ project_pki_subdirectory }}"
     creates: "{{ login_user_key }}"
   delegate_to: 127.0.0.1
   run_once: true
@@ -72,8 +72,8 @@
 - name: deploy ssh key for login user
   authorized_key:
     user: "{{ login_user }}"
-    # NOTE: presumes local_pki_directory is "~/[directory name]". may not work otherwise
-    key: "{{ lookup('file',  local_pki_directory | replace('~', lookup('env','HOME')) + '/' + login_user_key + '.pub') }}"
+    # NOTE: presumes project_pki_subdirectory is "~/[directory name]". may not work otherwise
+    key: "{{ lookup('file',  project_pki_subdirectory | replace('~', lookup('env','HOME')) + '/' + login_user_key + '.pub') }}"
   become: true
 
 - name: add entries to ssh_config
