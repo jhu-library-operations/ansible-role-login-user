@@ -1,4 +1,11 @@
 ---
+- name: create project subdirectory for ssh keys
+  file:
+    path: "{{ project_pki_subdirectory }}"
+    state: directory
+    mode: "u+rw,g-rwx,o-rwx"
+  delegate_to: 127.0.0.1
+
 - name: create ssh key for login user
   shell: >
     ssh-keygen
