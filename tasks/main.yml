@@ -26,7 +26,10 @@
   register: facts
 
 - name: report facts
-  debug: var=facts
+  debug:
+    var: facts
+    verbosity: 3
+
 
 # NOTE: need this before working with sudoers file, if SELinux is enforcing
 - name: install SELinux management libraries for RedHat family
