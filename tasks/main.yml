@@ -25,6 +25,7 @@
   setup:
   register: facts
 
+# verbosity level of 3 requires the play to be run with -vvv to output the debug data 
 - name: report facts
   debug:
     var: facts
