@@ -63,7 +63,7 @@
   file:
     path: "/home/{{ login_user }}"
     owner: "{{ login_user }}"
-    group: "{{ login_user }}"
+    group: "{{ login_group }}"
   become: true
 
 # give login user sudo
