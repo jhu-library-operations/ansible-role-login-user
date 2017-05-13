@@ -25,12 +25,11 @@
   setup:
   register: facts
 
-# verbosity level of 3 requires the play to be run with -vvv to output the debug data 
+# verbosity level of 3 requires the play to be run with -vvv to output the debug data
 - name: report facts
   debug:
     var: facts
     verbosity: 3
-
 
 # NOTE: need this before working with sudoers file, if SELinux is enforcing
 - name: install SELinux management libraries for RedHat family
@@ -57,14 +56,29 @@
     group:  "{{ login_group  }}"
   become: true
 
-# vagrant NFS mount runs before provision
-# causeing home to be owned by root
-- name: correct home permissions
-  file:
-    path: "/home/{{ login_user }}"
-    owner: "{{ login_user }}"
-    group: "{{ login_group }}"
-  become: true
+# the following workaround is required when we have a nfs mount to
+# the login user's home directory, or a directory therein.
+# the reason is that vagrant creates the directories for the mount as root;
+# by the time we add the login user here, the directories used as
+# the home directory are owned by root and therefore not set up correctly.
+# this workaround fixes the issue where it occurs and does no harm otherwise
+- block:
+  - name: create login user's bash config files, if they don't already exist
+    synchronize:
+      src: "/etc/skel/"
+      dest: "/home/{{ login_user }}"
+      rsync_opts:
+        - "--ignore-existing"
+    delegate_to: "{{ inventory_hostname }}"
+
+  - name: correct login user home permissions
+    file:
+      path: "/home/{{ login_user }}"
+      owner: "{{ login_user }}"
+      group: "{{ login_group }}"
+      state: directory
+      recurse: true
+    become: true
 
 # give login user sudo
 - block:
