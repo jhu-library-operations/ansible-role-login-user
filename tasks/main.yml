@@ -70,6 +70,7 @@
       rsync_opts:
         - "--ignore-existing"
     delegate_to: "{{ inventory_hostname }}"
+    become: true  
 
   - name: correct login user home permissions
     file:
