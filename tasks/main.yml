@@ -63,6 +63,14 @@
 # the home directory are owned by root and therefore not set up correctly.
 # this workaround fixes the issue where it occurs and does no harm otherwise
 - block:
+  - name: install rsync
+    package:
+      name: "{{ item }}"
+      state: present
+    become: true
+    with_items:
+      - rsync
+
   - name: create login user's bash config files, if they don't already exist
     synchronize:
       src: "/etc/skel/"
@@ -70,7 +78,7 @@
       rsync_opts:
         - "--ignore-existing"
     delegate_to: "{{ inventory_hostname }}"
-    become: true  
+    become: true
 
   - name: correct login user home permissions
     file:
