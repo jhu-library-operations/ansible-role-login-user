@@ -3,6 +3,7 @@
 project:                  "anseedble"
 # dev || stage || prod
 environ:                  "dev"
+debugging:                "true"
 login_user:               "deploy"
 local_pki_directory:      "~/.ssh"
 project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
