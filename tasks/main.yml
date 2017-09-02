@@ -21,6 +21,14 @@
   run_once: true
   when: "{{ create_login_user_key }}"
 
+- name: generate vault password file
+  shell: "openssl rand -hex 64 > vault_password_file"
+  args:
+    chdir: "{{ project_pki_subdirectory }}"
+    creates: "vault_password_file"
+  delegate_to: 127.0.0.1
+  no_log: "{{ not debugging }}"
+
 - name: gather facts
   setup:
   register: facts
