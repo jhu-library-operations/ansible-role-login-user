@@ -10,7 +10,12 @@ project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
 
 create_login_user_key:    true
 login_user_key:           "{{ project }}_{{ environ }}"
-login_user_passphrase:    "change me and put me in a vault file"
+login_user_passphrase:    ""
+# how to get from *the playbook that calls this role* to the project root
+login_user_relative_path_to_root:   ""
+login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
+login_user_vars_file:     "{{ login_user_path_to_vars }}/vars.yml"
+login_user_vault_file:    "{{ login_user_path_to_vars }}/vault.yml"
 # rsa, dsa, ecdsa, or ed25519
 key_type:                 "rsa"
 # key size in bits. e.g. 2048, 4096, or 15360 (15k) for rsa

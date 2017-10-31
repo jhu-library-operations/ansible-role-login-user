@@ -6,6 +6,55 @@
     mode: "u+rw,g-rwx,o-rwx"
   delegate_to: 127.0.0.1
 
+- name: generate vault password file
+  shell: "openssl rand -hex 64 > vault_password_file"
+  args:
+    chdir: "{{ project_pki_subdirectory }}"
+    creates: "vault_password_file"
+  delegate_to: 127.0.0.1
+  no_log: "{{ not debugging }}"
+
+- name: set vault_password_file var in ansible.cfg
+  lineinfile:
+    dest: "{{ login_user_relative_path_to_root }}ansible.cfg"
+    regexp: "^vault_password_file"
+    line:   "vault_password_file = {{ project_pki_subdirectory }}/vault_password_file"
+    create: true
+  delegate_to: 127.0.0.1
+
+- block:
+  - name: generate login user passphrase
+    shell: "openssl rand -hex 64"
+    register: passphrase
+    no_log: "{{ not debugging }}"
+
+  - name: set login user passphrase
+    set_fact:
+      login_user_passphrase: "{{ passphrase.stdout }}"
+    no_log: "{{ not debugging }}"
+  when: login_user_passphrase == ""
+
+- block:
+  - name: save login user passphrase in vault
+    lineinfile:
+      dest: "{{ login_user_vault_file }}"
+      regexp: "^vault_login_user_passphrase:"
+      line:   "vault_login_user_passphrase: {{ login_user_passphrase }}"
+      create: true
+
+  - name: set var to use vaulted passphrase
+    lineinfile:
+      dest: "{{ login_user_vars_file }}"
+      regexp: "^login_user_passphrase:"
+      line:   "login_user_passphrase:  \"{{ '{{' }} vault_login_user_passphrase }}\"" # tricky
+      create: true
+
+  - name: encrypt vault file
+    command: "ansible-vault encrypt {{ login_user_vault_file }}"
+    
+  when: vault_login_user_passphrase is not defined
+  delegate_to: 127.0.0.1
+
 - name: create ssh key for login user
   shell: >
     ssh-keygen
@@ -19,15 +68,8 @@
     creates: "{{ login_user_key }}"
   delegate_to: 127.0.0.1
   run_once: true
-  when: "{{ create_login_user_key }}"
-
-- name: generate vault password file
-  shell: "openssl rand -hex 64 > vault_password_file"
-  args:
-    chdir: "{{ project_pki_subdirectory }}"
-    creates: "vault_password_file"
-  delegate_to: 127.0.0.1
   no_log: "{{ not debugging }}"
+  when: "{{ create_login_user_key }}"
 
 - name: gather facts
   setup:
@@ -125,6 +167,7 @@
     user: "{{ login_user }}"
     # NOTE: presumes project_pki_subdirectory is "~/[directory name]". may not work otherwise
     key: "{{ lookup('file',  project_pki_subdirectory | replace('~', lookup('env','HOME')) + '/' + login_user_key + '.pub') }}"
+  no_log: "{{ not debugging }}"
   become: true
 
 - name: add entries to ssh_config
