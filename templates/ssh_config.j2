@@ -1,5 +1,5 @@
-Host {{ ansible_fqdn }} {{ ansible_hostname }}
-	Hostname {{ ansible_fqdn }}
+Host {{ hostvars[item]['inventory_hostname'] }} {{ hostvars[item]['ansible_hostname'] }}
+	Hostname {{ hostvars[item]['inventory_hostname'] }}
 	User {{ login_user }}
 	IdentityFile {{ project_pki_subdirectory }}/{{ login_user_key }}
 	PreferredAuthentications publickey

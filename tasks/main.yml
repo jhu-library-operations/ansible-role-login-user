@@ -33,6 +33,8 @@
       login_user_passphrase: "{{ passphrase.stdout }}"
     no_log: "{{ not debugging }}"
   when: login_user_passphrase == ""
+  delegate_to: 127.0.0.1
+  run_once: true
 
 - block:
   - name: save login user passphrase in vault
@@ -54,6 +56,7 @@
     
   when: vault_login_user_passphrase is not defined
   delegate_to: 127.0.0.1
+  run_once: true
 
 - name: create ssh key for login user
   shell: >
@@ -69,7 +72,7 @@
   delegate_to: 127.0.0.1
   run_once: true
   no_log: "{{ not debugging }}"
-  when: "{{ create_login_user_key }}"
+  when: create_login_user_key
 
 - name: gather facts
   setup:
@@ -173,6 +176,8 @@
 - name: add entries to ssh_config
   blockinfile:
     dest: "{{ local_pki_directory }}/config"
-    marker: "# {mark} {{ inventory_hostname }} {{ environ }}"
+    marker: "# {mark} {{ hostvars[item]['inventory_hostname'] }} {{ environ }}"
     block: "{{ lookup('template', 'ssh_config.j2') }}"
   delegate_to: 127.0.0.1
+  run_once: true
+  with_items: "{{ play_hosts }}"
