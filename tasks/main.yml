@@ -37,6 +37,11 @@
   run_once: true
 
 - block:
+  - name: create vault file
+    file:
+      path: "{{ login_user_vault_file }}"
+      state: touch
+
   - name: save login user passphrase in vault
     lineinfile:
       dest: "{{ login_user_vault_file }}"
