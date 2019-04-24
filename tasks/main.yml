@@ -58,7 +58,7 @@
 
   - name: encrypt vault file
     command: "ansible-vault encrypt {{ login_user_vault_file }}"
-    
+
   when: vault_login_user_passphrase is not defined
   delegate_to: 127.0.0.1
   run_once: true
@@ -93,6 +93,7 @@
 - name: install SELinux management libraries for RedHat family
   yum: name=libselinux-python state=present
   when: ansible_os_family == 'RedHat'
+  become: true
 
 - name: install SELinux management libraries for Debian family
   apt: name=python-selinux state=present
