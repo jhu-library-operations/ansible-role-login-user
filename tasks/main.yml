@@ -100,6 +100,28 @@
   when: ansible_os_family == 'Debian'
   become: true
 
+- getent:
+    database: passwd
+    key: vagrant
+    fail_key: false
+- debug:
+    var: getent_passwd
+
+- name: adjust vagrant user group
+  group:
+    name: "vagrant"
+    gid:  "{{ vagrant_group_gid | default(omit) }}"
+    state: present
+  when: getent_passwd['vagrant'] is defined and vagrant_group_gid is defined
+  become: true
+
+- name: adjust vagrant user id
+  user:
+    name: "vagrant"
+    uid:    "{{ vagrant_user_uid  | default(omit) }}"
+  when: getent_passwd.vagrant is defined and vagrant_user_uid is defined
+  become: true
+
 - name: add login user group
   group:
     name: "{{ login_group }}"
