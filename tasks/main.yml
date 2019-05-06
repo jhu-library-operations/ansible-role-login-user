@@ -115,11 +115,13 @@
   when: getent_passwd['vagrant'] is defined and vagrant_group_gid is defined
   become: true
 
+# NOTE: can't do this when using the vagrant user to run the role
+# can also fail if run by another user too soon after vagrant has run it
 - name: adjust vagrant user id
   user:
     name: "vagrant"
     uid:    "{{ vagrant_user_uid  | default(omit) }}"
-  when: getent_passwd.vagrant is defined and vagrant_user_uid is defined
+  when: getent_passwd.vagrant is defined and vagrant_user_uid is defined and ansible_user != "vagrant"
   become: true
 
 - name: add login user group
