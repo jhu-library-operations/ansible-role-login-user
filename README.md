@@ -1,20 +1,22 @@
 # Ansible Role: Login User
 =========
 
-### WIP...
-
 Creates an initial user for automation. Can optionally generate and/or deploy ssh keys for the user and add an ssh config entry for the project, including the user information.
 
-NOTE: This is really only useful in an environment where you begin with an authenticated user (such as vagrant), but which do not have the standard user account you prefer to use for software
+Updated to support use of a single master user (and its ssh key) across ansible projects,
+or to create a user (and its ssh key) per project & environment
+
+NOTE: The latter approach is really only useful in an environment where you begin with an authenticated user (such as vagrant), but which do not have the standard user account you prefer to use for software
 installation, configuration, and management.
 It is useful for establishing a common, consistent environment before proceeding with your other playbooks.
 If you're using Vagrant, you can run a setup playbook with the Ansible provisioner as the default (vagrant) user. Otherwise, the expectation is that configuration will be modified for it, it will run in isolation, and then the configs will be reset before proceeding.
 In such case, the following must be set in ansible.cfg
 (unfortunately they won't be read as playbook vars)
 (don't forget to remove them before running other plays):
-remote_user = [your pre-authorized user account]
-ask_pass = True
-ask_sudo_pass = True
+
+    remote_user = [your pre-authorized user account]
+    ask_pass = True
+    ask_sudo_pass = True
 
 Requirements
 ------------
@@ -36,6 +38,16 @@ Name of containing project - used in (default) name of generated ssh keys.
     environ:  "dev"
 
 Environment, e.g. dev, stage, or prod - used in (default) name of generated ssh keys.
+
+
+    debugging:                true
+
+Flag to control debugging output
+
+
+    use_master_user:          false
+
+Flag to indicate use of a master or per-project user
 
 
     login_user: "deploy"
@@ -60,12 +72,24 @@ Whether or not to generate ssh keys for the login user.
 
     login_user_key: "{{ project }}_{{ environ }}"
 
-Name given to generated ssh keys.
+Name given to generated ssh keys. Override if `use_master_user: true`
 
 
-    login_user_passphrase: "change me and put me in a vault file"
+    login_user_passphrase: ""
 
-Passphrase for generated ssh keys. Will probably be needed for keychain, ssh agent, etc. Obviously in need of securing, probably in a vault-protected file.
+Passphrase for generated ssh keys. Will probably be needed for keychain, ssh agent, etc. Written to a new environment-specific vault file for per-project users, or a valuted README file for master users (on first use only).
+
+
+    identity_file:            "{{ project_pki_subdirectory }}/{{ login_user_key }}"
+
+Location of the login user's ssh key. Override if `use_master_user: true`
+
+
+    login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
+    login_user_vars_file:     "{{ login_user_path_to_vars }}/vars.yml"
+    login_user_vault_file:    "{{ login_user_path_to_vars }}/vault.yml"
+
+Helper vars for pathing. Overridable if your project structure differs from the one described in [anseedble](https://github.com/dheles/anseedble).
 
 
     key_type: "rsa"
@@ -83,6 +107,34 @@ Key size in bits. e.g. 2048, 4096, or 15360 (15k) (for rsa). Must match type if 
 Whether or not to create an entry in the ssh config file (in the local pki directory).
 
 
+    login_user_grant_sudo:            true
+
+Flag for granting login user sudo
+
+
+    login_user_passwwordless_sudo:    false
+
+Flag for granting login user passwordless sudo (`login_user_grant_sudo` must be true)
+
+
+    login_user_sudoers:               ""
+
+Entry in sudoers file for login user. Defaults to `ALL=(ALL) PASSWD: ALL`.
+
+
+Optional Vars:
+
+    # login_user_uid:           1001
+    # login_group_gid:          1001
+
+Optional UID and GID for login user and group
+
+
+    # login_group:              "{{ login_user }}"
+
+Optional group for login user. Will be created if provided & does not already exist.
+
+
 Dependencies
 ------------
 
@@ -95,6 +147,23 @@ Example Playbook
     - hosts: servers
       roles:
          - { role: login-user }
+
+Additionally, the encryption of a given password can be accomplished by creating a playbook like so:
+
+    - name: encrypt provided password
+      hosts: default
+      connection: local
+
+      tasks:
+      - name: encrypt provided password
+        include_role:
+          name: login-user
+          tasks_from: encrypt_password
+
+...and then running it like:
+
+    ansible-playbook encrypt_password.yml -v -e password=super-secure
+
 
 License
 -------
