@@ -1,0 +1,237 @@
+---
+# NOTE: while this is not an ideal location if we aren't creating per-project keys,
+# we want to maintain compatibility with projects that were set up using deploy user,
+# lest we lose access to existing vault files (of which there are many)
+- name: create project subdirectory
+  file:
+    path: "{{ project_pki_subdirectory }}"
+    state: directory
+    mode: "u+rw,g-rwx,o-rwx"
+  delegate_to: 127.0.0.1
+
+- name: generate vault password file
+  shell: "openssl rand -hex 64 > vault_password_file"
+  args:
+    chdir: "{{ project_pki_subdirectory }}"
+    creates: "vault_password_file"
+  delegate_to: 127.0.0.1
+  no_log: "{{ not debugging }}"
+
+- name: set vault_password_file var in ansible.cfg
+  lineinfile:
+    dest: "{{ login_user_relative_path_to_root }}ansible.cfg"
+    regexp: "^vault_password_file"
+    line:   "vault_password_file = {{ project_pki_subdirectory }}/vault_password_file"
+    create: true
+  delegate_to: 127.0.0.1
+
+- set_fact:
+    identity_file: "{{ local_pki_directory }}/{{ login_user_key }}"
+
+- name: check to see if the identity file already exists
+  stat:
+    path: "{{ identity_file }}"
+  delegate_to: 127.0.0.1
+  register: "key"
+
+- block:
+  - name: generate login user passphrase
+    shell: "openssl rand -hex 64"
+    register: passphrase
+    no_log: "{{ not debugging }}"
+
+  - name: set login user passphrase
+    set_fact:
+      login_user_passphrase: "{{ passphrase.stdout }}"
+    no_log: "{{ not debugging }}"
+
+  when: login_user_passphrase == "" and not key.stat.exists
+  delegate_to: 127.0.0.1
+  run_once: true
+
+- block:
+  - name: template README file
+    template:
+      src: "README.j2"
+      dest: "{{ login_user_relative_path_to_root }}README.tmp"
+
+  - name: encrypt README file
+    command: "ansible-vault encrypt README.tmp"
+
+  - name: gitignore README (and other tmp files)
+    lineinfile:
+      dest: "{{ login_user_relative_path_to_root }}.gitignore"
+      regexp: "^\\*.tmp"
+      line:   "*.tmp"
+    delegate_to: 127.0.0.1
+
+  when: create_login_user_key and not key.stat.exists
+  delegate_to: 127.0.0.1
+  run_once: true
+
+- name: create ssh key for login user
+  shell: >
+    ssh-keygen
+    -t "{{ key_type }}"
+    -b "{{ key_size }}"
+    -f "{{ login_user_key }}"
+    -C "{{ login_user }} master key"
+    -N "{{ login_user_passphrase }}"
+  args:
+    chdir: "{{ local_pki_directory }}"
+    creates: "{{ login_user_key }}"
+  delegate_to: 127.0.0.1
+  run_once: true
+  no_log: "{{ not debugging }}"
+  when: create_login_user_key
+
+- name: gather facts
+  setup:
+  register: facts
+
+# verbosity level of 3 requires the play to be run with -vvv to output the debug data
+- name: report facts
+  debug:
+    var: facts
+    verbosity: 3
+
+# NOTE: need this before working with sudoers file, if SELinux is enforcing
+- name: install SELinux management libraries for RedHat family
+  yum: name=libselinux-python state=present
+  when: ansible_os_family == 'RedHat'
+  become: true
+
+- name: install SELinux management libraries for Debian family
+  apt: name=python-selinux state=present
+  when: ansible_os_family == 'Debian'
+  become: true
+
+- getent:
+    database: passwd
+    key: vagrant
+    fail_key: false
+- debug:
+    var: getent_passwd
+
+- name: adjust vagrant user group
+  group:
+    name: "vagrant"
+    gid:  "{{ vagrant_group_gid | default(omit) }}"
+    state: present
+  when: getent_passwd['vagrant'] is defined and vagrant_group_gid is defined
+  become: true
+
+# NOTE: can't do this when using the vagrant user to run the role
+# can also fail if run by another user too soon after vagrant has run it
+- name: adjust vagrant user id
+  user:
+    name: "vagrant"
+    uid:    "{{ vagrant_user_uid  | default(omit) }}"
+  when: getent_passwd.vagrant is defined and vagrant_user_uid is defined and ansible_user != "vagrant"
+  become: true
+
+- name: add login user group
+  group:
+    name: "{{ login_group }}"
+    gid:  "{{ login_group_gid | default(omit) }}"
+    state: present
+  become: true
+  when: login_group is defined
+
+- name: add login user
+  user:
+    name: "{{ login_user }}"
+    shell: "/bin/bash"
+    uid:    "{{ login_user_uid | default(omit) }}"
+    group:  "{{ login_group | default(omit)  }}"
+    password: "{{ login_password | default(omit) }}"
+  no_log: "{{ not debugging }}"
+  become: true
+
+# the following workaround is required when we have a nfs mount to
+# the login user's home directory, or a directory therein.
+# the reason is that vagrant creates the directories for the mount as root;
+# by the time we add the login user here, the directories used as
+# the home directory are owned by root and therefore not set up correctly.
+# this workaround fixes the issue where it occurs and does no harm otherwise
+- block:
+  - name: install rsync
+    package:
+      name: "{{ item }}"
+      state: present
+    become: true
+    with_items:
+      - rsync
+
+  - name: create login user's bash config files, if they don't already exist
+    synchronize:
+      src: "/etc/skel/"
+      dest: "/home/{{ login_user }}"
+      rsync_opts:
+        - "--ignore-existing"
+    delegate_to: "{{ inventory_hostname }}"
+    become: true
+
+  - name: correct login user home permissions
+    file:
+      path: "/home/{{ login_user }}"
+      owner: "{{ login_user }}"
+      group: "{{ login_group | default(omit) }}"
+      state: directory
+      recurse: true
+    become: true
+
+- name: grant login user sudo
+  block:
+  - block:
+    - name: set password tag
+      set_fact:
+        password_tag: "PASSWD:"
+    - set_fact:
+        password_tag: "NOPASSWD:"
+      when: login_user_passwwordless_sudo
+
+    - name: set sudoers line
+      set_fact:
+        login_user_sudoers: "ALL=(ALL) {{ password_tag }} ALL"
+
+    when: login_user_sudoers == ""
+
+  - name: create temporary sudoers file for login user
+    copy:
+      dest: "/tmp/sudoers_{{ login_user }}.edit"
+      content: "{{ login_user }} {{ login_user_sudoers }}"
+
+  - name: validate and implement edits
+    copy:
+      src: "/tmp/sudoers_{{ login_user }}.edit"
+      dest: "/etc/sudoers.d/{{ login_user }}"
+      validate: 'visudo -cf %s'
+      remote_src: true
+      mode: "u=r,g=r,o-rwx" #0440
+
+  - name: cleanup temp file
+    file:
+      path: "/tmp/sudoers_{{ login_user }}.edit"
+      state: absent
+
+  become: true
+  when: login_user_grant_sudo
+# ...end block
+
+- name: deploy ssh key for login user
+  authorized_key:
+    user: "{{ login_user }}"
+    # NOTE: presumes project_pki_subdirectory is "~/[directory name]". may not work otherwise
+    key: "{{ lookup('file',  local_pki_directory | replace('~', lookup('env','HOME')) + '/' + login_user_key + '.pub') }}"
+  no_log: "{{ not debugging }}"
+  become: true
+
+- name: add entries to ssh_config
+  blockinfile:
+    dest: "{{ local_pki_directory }}/config"
+    marker: "# {mark} {{ hostvars[item]['inventory_hostname'] }} {{ environ }}"
+    block: "{{ lookup('template', 'ssh_config.j2') }}"
+  delegate_to: 127.0.0.1
+  run_once: true
+  with_items: "{{ play_hosts }}"
