@@ -121,7 +121,7 @@
   user:
     name: "vagrant"
     uid:    "{{ vagrant_user_uid  | default(omit) }}"
-  when: getent_passwd.vagrant is defined and vagrant_user_uid is defined and ansible_user != "vagrant"
+  when: getent_passwd.vagrant is defined and vagrant_user_uid is defined and ansible_user_id != "vagrant"
   become: true
 
 - name: add login user group
