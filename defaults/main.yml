@@ -3,7 +3,8 @@
 project:                  "anseedble"
 # dev || stage || prod
 environ:                  "dev"
-debugging:                "true"
+debugging:                true
+use_master_user:          false
 login_user:               "deploy"
 local_pki_directory:      "~/.ssh"
 project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
@@ -11,6 +12,7 @@ project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
 create_login_user_key:    true
 login_user_key:           "{{ project }}_{{ environ }}"
 login_user_passphrase:    ""
+identity_file:            "{{ project_pki_subdirectory }}/{{ login_user_key }}"
 # how to get from *the playbook that calls this role* to the project root
 login_user_relative_path_to_root:   ""
 login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
@@ -26,4 +28,8 @@ create_ssh_config_entry:  true
 
 # login_user_uid:           1001
 # login_group_gid:          1001
-login_group:              "{{ login_user }}"
+# login_group:              "{{ login_user }}"
+
+login_user_grant_sudo:            true
+login_user_passwwordless_sudo:    false
+login_user_sudoers:               "" # defaults to "ALL=(ALL) PASSWD: ALL"
