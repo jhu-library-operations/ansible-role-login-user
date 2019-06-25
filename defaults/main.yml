@@ -33,3 +33,7 @@ create_ssh_config_entry:  true
 login_user_grant_sudo:            true
 login_user_passwwordless_sudo:    false
 login_user_sudoers:               "" # defaults to "ALL=(ALL) PASSWD: ALL"
+
+# NOTE: additional aliases for ssh config.
+# hostvars[item]['inventory_hostname'] and project-environ are included by default
+ssh_aliases: []

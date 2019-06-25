@@ -1,4 +1,4 @@
-Host {{ hostvars[item]['inventory_hostname'] }} {{ project }}-{{ environ }}
+Host {{ hostvars[item]['inventory_hostname'] }} {{ project }}-{{ environ }} {% for alias in ssh_aliases %}{{ alias }} {% endfor %}  
 	Hostname {{ hostvars[item]['inventory_hostname'] }}
 	User {{ login_user }}
 	IdentityFile {{ identity_file }}
