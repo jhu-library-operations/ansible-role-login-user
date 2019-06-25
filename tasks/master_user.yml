@@ -241,3 +241,12 @@
     path: "/etc/sudoers.d/deploy"
     state: absent
   become: true
+
+- name: remove ssh key for deploy user
+  authorized_key:
+    user: "deploy"
+    # NOTE: presumes project_pki_subdirectory is "~/[directory name]". may not work otherwise
+    key: "{{ lookup('file',  project_pki_subdirectory | replace('~', lookup('env','HOME')) + '/' + project + '_' + environ + '.pub') }}"
+    state: absent
+  no_log: "{{ not debugging }}"
+  become: true
