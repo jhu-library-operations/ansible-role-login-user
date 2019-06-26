@@ -25,6 +25,7 @@ key_type:                 "rsa"
 key_size:                 4096
 
 create_ssh_config_entry:  true
+login_user_ssh_template:  'ssh_config.j2'
 
 # login_user_uid:           1001
 # login_group_gid:          1001

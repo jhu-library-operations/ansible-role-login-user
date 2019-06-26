@@ -207,7 +207,7 @@
   blockinfile:
     dest: "{{ local_pki_directory }}/config"
     marker: "# {mark} {{ hostvars[item]['inventory_hostname'] }} {{ environ }}"
-    block: "{{ lookup('template', 'ssh_config.j2') }}"
+    block: "{{ lookup('template', login_user_ssh_template) }}"
   delegate_to: 127.0.0.1
   run_once: true
   with_items: "{{ play_hosts }}"
