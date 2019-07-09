@@ -10,13 +10,6 @@ NOTE: The latter approach is really only useful in an environment where you begi
 installation, configuration, and management.
 It is useful for establishing a common, consistent environment before proceeding with your other playbooks.
 If you're using Vagrant, you can run a setup playbook with the Ansible provisioner as the default (vagrant) user. Otherwise, the expectation is that configuration will be modified for it, it will run in isolation, and then the configs will be reset before proceeding.
-In such case, the following must be set in ansible.cfg
-(unfortunately they won't be read as playbook vars)
-(don't forget to remove them before running other plays):
-
-    remote_user = [your pre-authorized user account]
-    ask_pass = True
-    ask_sudo_pass = True
 
 Requirements
 ------------
@@ -48,6 +41,12 @@ Flag to control debugging output
     use_master_user:          false
 
 Flag to indicate use of a master or per-project user
+
+
+    deprivilege_deploy_user:  false
+
+Flag to indicate whether to remove deploy user's sudo and login privileges.
+Should only be true if `use_master_user: true` and no one else still needs to use the deploy user
 
 
     login_user: "deploy"
@@ -83,6 +82,11 @@ Passphrase for generated ssh keys. Will probably be needed for keychain, ssh age
     identity_file:            "{{ project_pki_subdirectory }}/{{ login_user_key }}"
 
 Location of the login user's ssh key. Override if `use_master_user: true`
+
+
+    login_user_relative_path_to_root:   ""
+
+How to get from *the playbook that calls this role* to the project root
 
 
     login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
@@ -122,6 +126,12 @@ Flag for granting login user passwordless sudo (`login_user_grant_sudo` must be 
 Entry in sudoers file for login user. Defaults to `ALL=(ALL) PASSWD: ALL`.
 
 
+    ssh_aliases: []
+
+Additional aliases for ssh config.
+`Hostvars[item]['inventory_hostname']` and `project-environ` are included by default
+
+
 Optional Vars:
 
     # login_user_uid:           1001
@@ -148,6 +158,37 @@ Example Playbook
       roles:
          - { role: login-user }
 
+
+If needed, a master ansible ini file can be created by creating a playbook like:
+
+    - name: create master ansible ini file
+      hosts: oriole
+      connection: local
+
+      tasks:
+      - name: create master ansible ini file
+        include_role:
+          name: login-user
+          tasks_from: create_ini
+        vars:
+          remote_user: "[your JHED]"
+          login_user: "[your JHED]"
+          login_group: "developers"
+          password: "[your password for dev VMs]"
+
+...and then running it like:
+
+    ansible-playbook create_ini.yml -v
+
+... or if you prefer supplying your vars on the command-line, omit them from the playbook and run:
+
+    ansible-playbook create_ini.yml -v -e "remote_user=user login_user=user login_group=group password=password"
+
+Vars can then be read from the created file like so:
+
+    login_password:         "{{ lookup('ini', 'login_password section=dev file=~/.ansible.ini') }}"
+
+
 Additionally, the encryption of a given password can be accomplished by creating a playbook like so:
 
     - name: encrypt provided password
@@ -162,7 +203,7 @@ Additionally, the encryption of a given password can be accomplished by creating
 
 ...and then running it like:
 
-    ansible-playbook encrypt_password.yml -v -e password=super-secure
+    ansible-playbook encrypt_password.yml -v -e "password=password"
 
 
 License
