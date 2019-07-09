@@ -1,0 +1,27 @@
+---
+# create ansible ini file, including an encrypted password for use with the user module
+# vars required:
+#   remote_user: "[your JHED]"
+#   login_user: "[your JHED]"
+#   login_group: "[default group for login user]"
+#   environ: "[environment - should almost certainly be 'dev']"
+#   password: "[your password for (dev) VMs]"
+
+- name: install the Passlib password hashing library
+  pip:
+    name: ['passlib', 'argparse']
+  delegate_to: 127.0.0.1
+
+- name: encrypt password
+  script: return_encrypted_password.py -p {{ password }}
+  args:
+    executable: python3
+  delegate_to: 127.0.0.1
+  register: encrypted_password
+
+- name: create ini file
+  template:
+    src: "ansible.ini.j2"
+    dest: "~/.ansible.ini"
+  vars:
+    login_password: "{{ encrypted_password.stdout }}"
