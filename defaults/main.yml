@@ -5,6 +5,7 @@ project:                  "anseedble"
 environ:                  "dev"
 debugging:                true
 use_master_user:          false
+deprivilege_deploy_user:  false
 login_user:               "deploy"
 local_pki_directory:      "~/.ssh"
 project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"

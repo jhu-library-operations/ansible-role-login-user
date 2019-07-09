@@ -124,6 +124,11 @@
   when: getent_passwd.vagrant is defined and vagrant_user_uid is defined and ansible_user_id != "vagrant"
   become: true
 
+- name:
+  set_fact:
+    login_group: "{{ login_user }}"
+  when: login_group is not defined
+
 - name: add login user group
   group:
     name: "{{ login_group }}"
