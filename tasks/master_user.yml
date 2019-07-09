@@ -241,12 +241,33 @@
     path: "/etc/sudoers.d/deploy"
     state: absent
   become: true
+  when: deprivilege_deploy_user
 
-- name: remove ssh key for deploy user
-  authorized_key:
-    user: "deploy"
-    # NOTE: presumes project_pki_subdirectory is "~/[directory name]". may not work otherwise
-    key: "{{ lookup('file',  project_pki_subdirectory | replace('~', lookup('env','HOME')) + '/' + project + '_' + environ + '.pub') }}"
+- name: remove your ssh key for deploy user
+  block:
+  - set_fact:
+      deploy_user_key: "{{ project_pki_subdirectory }}/{{ project }}_{{ environ }}.pub"
+
+  - name: check for deploy user's ssh key
+    stat:
+      path: "{{ deploy_user_key }}"
+    delegate_to: 127.0.0.1
+    register: "key"
+
+  - name: remove your ssh key for deploy user
+    authorized_key:
+      user: "deploy"
+      # NOTE: presumes project_pki_subdirectory is "~/[directory name]". may not work otherwise
+      key: "{{ lookup('file',  deploy_user_key | replace('~', lookup('env','HOME'))) }}"
+      state: absent
+    no_log: "{{ not debugging }}"
+    become: true
+    when: key.stat.exists
+  when: not deprivilege_deploy_user
+
+- name: remove all ssh keys for deploy user
+  file:
+    path: "/home/deploy/.ssh/authorized_keys"
     state: absent
-  no_log: "{{ not debugging }}"
   become: true
+  when: deprivilege_deploy_user
