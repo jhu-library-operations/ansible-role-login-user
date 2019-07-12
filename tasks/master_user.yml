@@ -106,7 +106,8 @@
   when: ansible_os_family == 'Debian'
   become: true
 
-- getent:
+- name: check to see if vagrant user exists
+  getent:
     database: passwd
     key: vagrant
     fail_key: false
@@ -243,6 +244,14 @@
   become: true
   when: deprivilege_deploy_user
 
+- name: check to see if deploy user exists
+  getent:
+    database: passwd
+    key: deploy
+    fail_key: false
+- debug:
+    var: getent_passwd
+
 - name: remove your ssh key for deploy user
   block:
   - set_fact:
@@ -263,7 +272,7 @@
     no_log: "{{ not debugging }}"
     become: true
     when: key.stat.exists
-  when: not deprivilege_deploy_user
+  when: not deprivilege_deploy_user and getent_passwd['deploy'] is not none
 
 - name: remove all ssh keys for deploy user
   file:
