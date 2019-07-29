@@ -137,7 +137,7 @@
     gid:  "{{ login_group_gid | default(omit) }}"
     state: present
   become: true
-  when: login_group is defined
+  when: create_login_user and login_group is defined
 
 - name: add login user
   user:
@@ -148,6 +148,7 @@
     password: "{{ login_password | default(omit) }}"
   no_log: "{{ not debugging }}"
   become: true
+  when: create_login_user
 
 # the following workaround is required when we have a nfs mount to
 # the login user's home directory, or a directory therein.
