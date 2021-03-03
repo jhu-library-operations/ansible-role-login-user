@@ -1,20 +1,32 @@
 # Ansible Role: Login User
 =========
 
-Creates an initial user for automation. Can optionally generate and/or deploy ssh keys for the user and add an ssh config entry for the project, including the user information.
+So far, only tested for https://github.com/jhu-library-applications/catalyst-ansible when using vagrant.
 
-Updated to support use of a single master user (and its ssh key) across ansible projects,
-or to create a user (and its ssh key) per project & environment
-
-NOTE: The latter approach is really only useful in an environment where you begin with an authenticated user (such as vagrant), but which do not have the standard user account you prefer to use for software
-installation, configuration, and management.
-It is useful for establishing a common, consistent environment before proceeding with your other playbooks.
-If you're using Vagrant, you can run a setup playbook with the Ansible provisioner as the default (vagrant) user. Otherwise, the expectation is that configuration will be modified for it, it will run in isolation, and then the configs will be reset before proceeding.
+What it does: 
+1. Creates {{ login_group }} on vagrant hosts.
+2. Creates {{ login_user }} on vagrant hosts.
+3. Copies ~/.ssh/id_rsa.pub to vagrant-hosts for {{ login_user }}.
+4. Configures passwordless sudo for {{ login_user }} on vagrant hosts.
 
 Requirements
 ------------
+1. Assumes that ~/.ssh/id_rsa.pub exists.
+2. It is necessary to first edit catalyst-ansible/setup.yml similar to this:
+```---
+- name: create login user for installation & configuration
+  hosts: all
 
-ssh-keygen installed on the control machine, if ssh keys are to be generated.
+  vars:
+    remote_user: jgara1
+    login_user: jgara1
+    login_group: msel-operations
+    using_vagrant: true
+
+  roles:
+  - { role: login-user, tags: ['login-user'] }
+
+```
 
 
 Role Variables
