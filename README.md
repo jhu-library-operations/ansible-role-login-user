@@ -3,11 +3,11 @@
 
 So far, only tested for https://github.com/jhu-library-applications/catalyst-ansible when using vagrant.
 
-What it does: 
-1. Creates {{ login_group }} on vagrant hosts.
-2. Creates {{ login_user }} on vagrant hosts.
-3. Copies ~/.ssh/id_rsa.pub to vagrant-hosts for {{ login_user }}.
-4. Configures passwordless sudo for {{ login_user }} on vagrant hosts.
+What it does if {{ using_vagrant }} == true:
+1. Creates {{ login_group }}.
+2. Creates {{ login_user }}.
+3. Installs ~/.ssh/id_rsa.pub for {{ login_user }}.
+4. Configures passwordless sudo for {{ login_user }}.
 
 Requirements
 ------------
@@ -32,7 +32,11 @@ Requirements
 Role Variables
 --------------
 
-1. ```login_user: "<jhedid>"```
+1. ```using_vagrant: true```
+
+      Signal that we are deploying to vagrant.
+      
+3. ```login_user: "<jhedid>"```
 
       User account to be created. Given passwordless sudo and ssh access via ssh key authentication. Used for installing and configuring software on the server. Expected to be distinct from application service account (e.g. tomcat, apache, catalyst, etc.).
 
