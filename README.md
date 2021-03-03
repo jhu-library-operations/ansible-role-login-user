@@ -50,8 +50,10 @@ Role Variables
 
 1. Optional Vars:
 
-    ```# login_user_uid:           1001
-       # login_group_gid:          1001```
+```
+       login_user_uid:           1001
+       login_group_gid:          1001
+```
 
       Optional UID and GID for login user and group
 
@@ -129,4 +131,4 @@ CC0
 Author Information
 ------------------
 
-Drew Heles
+
