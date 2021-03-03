@@ -32,9 +32,9 @@ Requirements
 Role Variables
 --------------
 
-1. ```login_user: "deploy"```
+1. ```login_user: "<jhedid>"```
 
-      User account to be created. Given passwordless sudo and ssh access via ssh key authentication. Used for installing and configuring software on the server. Expected to be distinct from application service account.
+      User account to be created. Given passwordless sudo and ssh access via ssh key authentication. Used for installing and configuring software on the server. Expected to be distinct from application service account (e.g. tomcat, apache, catalyst, etc.).
 
 1. ```local_ssh_directory: "~/.ssh"```
 
