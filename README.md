@@ -32,93 +32,21 @@ Requirements
 Role Variables
 --------------
 
-1. ```project: "anseedble"```
-
-      Name of containing project - used in (default) name of generated ssh keys.
-
-1. ```environ:  "dev"```
-
-      Environment, e.g. dev, stage, or prod - used in (default) name of generated ssh keys.
-
-1. ```debugging: true```
-
-      Flag to control debugging output
-
-1. ```use_master_user: false```
-
-      Flag to indicate use of a master or per-project user
-
-1. ```deprivilege_deploy_user: false```
-
-      Flag to indicate whether to remove deploy user's sudo and login privileges.
-Should only be true if `use_master_user: true` and no one else still needs to use the deploy user
-
 1. ```login_user: "deploy"```
 
       User account to be created. Given passwordless sudo and ssh access via ssh key authentication. Used for installing and configuring software on the server. Expected to be distinct from application service account.
 
-1. ```local_pki_directory: "~/.ssh"```
+1. ```local_ssh_directory: "~/.ssh"```
 
       Location of ssh config file on the control machine.
 
-1. ```project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"```
+1. ```login_user_passwordless_sudo: true```
 
-      Location of ssh keys and vault password file on the control machine.
-
-1. ```create_login_user_key: true```
-
-      Whether or not to generate ssh keys for the login user.
-
-1. ```login_user_key: "{{ project }}_{{ environ }}"```
-
-      Name given to generated ssh keys. Override if `use_master_user: true`
-
-1. ```login_user_passphrase: ""```
-
-      Passphrase for generated ssh keys. Will probably be needed for keychain, ssh agent, etc. Written to a new environment-specific vault file for per-project users, or a valuted README file for master users (on first use only).
-
-1. ```identity_file: "{{ project_pki_subdirectory }}/{{ login_user_key }}"```
-
-      Location of the login user's ssh key. Override if `use_master_user: true`
-
-1. ```login_user_relative_path_to_root: ""```
-
-      How to get from *the playbook that calls this role* to the project root
-
-1. ```login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
-      login_user_vars_file:     "{{ login_user_path_to_vars }}/vars.yml"
-      login_user_vault_file:    "{{ login_user_path_to_vars }}/vault.yml"```
-
-      Helper vars for pathing. Overridable if your project structure differs from the one described in [anseedble](https://github.com/dheles/anseedble).
-
-1. ```key_type: "rsa"```
-
-      SSH key type for generated keys, e.g. rsa, dsa, ecdsa, or ed25519. ed25519 (etc) may need adjustment, as unlike other types, it requires matching key size that is usually (always?) omitted from the properties passed to the command.
-
-1. ```key_size: 4096```
-
-      Key size in bits. e.g. 2048, 4096, or 15360 (15k) (for rsa). Must match type if using ed25519, etc.
-
-1. ```create_ssh_config_entry:  true```
-
-      Whether or not to create an entry in the ssh config file (in the local pki directory).
-
-1. ```login_user_grant_sudo: true```
-
-      Flag for granting login user sudo
-
-1. ```login_user_passwwordless_sudo: false```
-
-      Flag for granting login user passwordless sudo (`login_user_grant_sudo` must be true)
+      Flag for granting login user passwordless sudo.
 
 1. ```login_user_sudoers: ""```
 
       Entry in sudoers file for login user. Defaults to `ALL=(ALL) PASSWD: ALL`.
-
-1. ```ssh_aliases: []```
-
-      Additional aliases for ssh config.
-`Hostvars[item]['inventory_hostname']` and `project-environ` are included by default
 
 1. Optional Vars:
 
