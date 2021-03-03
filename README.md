@@ -20,127 +20,124 @@ ssh-keygen installed on the control machine, if ssh keys are to be generated.
 Role Variables
 --------------
 
-Available variables (with current defaults)...
-
-
-    project: "anseedble"
+1. ```project: "anseedble"```
 
 Name of containing project - used in (default) name of generated ssh keys.
 
 
-    environ:  "dev"
+1. ```environ:  "dev"```
 
 Environment, e.g. dev, stage, or prod - used in (default) name of generated ssh keys.
 
 
-    debugging:                true
+1. ```debugging: true```
 
 Flag to control debugging output
 
 
-    use_master_user:          false
+1. ```use_master_user: false```
 
 Flag to indicate use of a master or per-project user
 
 
-    deprivilege_deploy_user:  false
+1. ```deprivilege_deploy_user: false```
 
 Flag to indicate whether to remove deploy user's sudo and login privileges.
 Should only be true if `use_master_user: true` and no one else still needs to use the deploy user
 
 
-    login_user: "deploy"
+1. ```login_user: "deploy"```
 
 User account to be created. Given passwordless sudo and ssh access via ssh key authentication. Used for installing and configuring software on the server. Expected to be distinct from application service account.
 
 
-    local_pki_directory: "~/.ssh"
+1. ```local_pki_directory: "~/.ssh"```
 
 Location of ssh config file on the control machine.
 
 
-    project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
+1. ```project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"```
 
 Location of ssh keys and vault password file on the control machine.
 
 
-    create_login_user_key: true
+1. ```create_login_user_key: true```
 
 Whether or not to generate ssh keys for the login user.
 
 
-    login_user_key: "{{ project }}_{{ environ }}"
+1. ```login_user_key: "{{ project }}_{{ environ }}"```
 
 Name given to generated ssh keys. Override if `use_master_user: true`
 
 
-    login_user_passphrase: ""
+1. ```login_user_passphrase: ""```
 
 Passphrase for generated ssh keys. Will probably be needed for keychain, ssh agent, etc. Written to a new environment-specific vault file for per-project users, or a valuted README file for master users (on first use only).
 
 
-    identity_file:            "{{ project_pki_subdirectory }}/{{ login_user_key }}"
+1. ```identity_file: "{{ project_pki_subdirectory }}/{{ login_user_key }}"```
 
 Location of the login user's ssh key. Override if `use_master_user: true`
 
 
-    login_user_relative_path_to_root:   ""
+1. ```login_user_relative_path_to_root: ""```
 
 How to get from *the playbook that calls this role* to the project root
 
 
-    login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
-    login_user_vars_file:     "{{ login_user_path_to_vars }}/vars.yml"
-    login_user_vault_file:    "{{ login_user_path_to_vars }}/vault.yml"
+1. ```login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
+      login_user_vars_file:     "{{ login_user_path_to_vars }}/vars.yml"
+      login_user_vault_file:    "{{ login_user_path_to_vars }}/vault.yml"```
 
 Helper vars for pathing. Overridable if your project structure differs from the one described in [anseedble](https://github.com/dheles/anseedble).
 
 
-    key_type: "rsa"
+1. ```key_type: "rsa"```
 
 SSH key type for generated keys, e.g. rsa, dsa, ecdsa, or ed25519. ed25519 (etc) may need adjustment, as unlike other types, it requires matching key size that is usually (always?) omitted from the properties passed to the command.
 
 
-    key_size: 4096
+1. ```key_size: 4096```
 
 Key size in bits. e.g. 2048, 4096, or 15360 (15k) (for rsa). Must match type if using ed25519, etc.
 
 
-    create_ssh_config_entry:  true
+1. ```create_ssh_config_entry:  true```
 
 Whether or not to create an entry in the ssh config file (in the local pki directory).
 
 
-    login_user_grant_sudo:            true
+1. ```login_user_grant_sudo: true```
 
 Flag for granting login user sudo
 
 
-    login_user_passwwordless_sudo:    false
+1. ```login_user_passwwordless_sudo: false```
 
 Flag for granting login user passwordless sudo (`login_user_grant_sudo` must be true)
 
 
-    login_user_sudoers:               ""
+1. ```login_user_sudoers: ""```
 
 Entry in sudoers file for login user. Defaults to `ALL=(ALL) PASSWD: ALL`.
 
 
-    ssh_aliases: []
+1. ```ssh_aliases: []```
 
 Additional aliases for ssh config.
 `Hostvars[item]['inventory_hostname']` and `project-environ` are included by default
 
 
-Optional Vars:
+1. Optional Vars:
 
-    # login_user_uid:           1001
-    # login_group_gid:          1001
+    ```# login_user_uid:           1001
+       # login_group_gid:          1001```
 
 Optional UID and GID for login user and group
 
 
-    # login_group:              "{{ login_user }}"
+1. ```# login_group:              "{{ login_user }}"```
 
 Optional group for login user. Will be created if provided & does not already exist.
 
