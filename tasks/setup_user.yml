@@ -1,0 +1,87 @@
+---
+# Assumptions:
+# - Remote jhed user is already configured on target host(s) with sudo privileges (but sudo requires password).
+
+- name: gather facts
+  setup:
+  register: facts
+
+# verbosity level of 3 requires the play to be run with -vvv to output the debug data
+- name: report facts
+  debug:
+    var: facts
+    verbosity: 3
+
+- name: "If not vagrant, check if PBIS is active"
+  block:
+  - name: "Check if PBIS is active"
+    become: true
+    shell: "/opt/pbis/bin/domainjoin-cli query | egrep 'OU=MSEL-LinuxServers,OU=MSEL-Cells,OU=MSEL,DC=win,DC=ad,DC=jhu,DC=edu' | wc -l"
+    register: pbis_installed
+
+  - name: "Die if pbis not installed"
+    meta: end_play
+    when: pbis_installed.stdout == "0"
+  when: not using_vagrant
+# --------------------------------------- 
+- name: add login user group
+  group:
+    name: "{{ login_group }}"
+    gid:  "{{ login_group_gid | default(omit) }}"
+    state: present
+  become: true
+  when: using_vagrant
+
+- name: add login user
+  user:
+    name: "{{ login_user }}"
+    shell: "/bin/bash"
+    uid:    "{{ login_user_uid | default(omit) }}"
+    group:  "{{ login_group | default(omit)  }}"
+  become: true
+  when: using_vagrant
+
+- name: grant login user sudo
+  block:
+  - block:
+    - name: set password tag
+      set_fact:
+        password_tag: "PASSWD:"
+    - set_fact:
+        password_tag: "NOPASSWD:"
+      when: login_user_passwordless_sudo
+
+    - name: set sudoers line
+      set_fact:
+        login_group_sudoers: "ALL=(ALL) {{ password_tag }} ALL"
+
+    when: login_group_sudoers == ""
+
+  - name: create temporary sudoers file for login user
+    copy:
+      dest: "/tmp/sudoers_{{ login_group }}.edit"
+      content: "%{{ login_group }} {{ login_group_sudoers }}"
+
+  - name: validate and implement edits
+    copy:
+      src: "/tmp/sudoers_{{ login_group }}.edit"
+      dest: "/etc/sudoers.d/{{ login_group }}"
+      validate: 'visudo -cf %s'
+      remote_src: true
+      mode: "u=r,g=r,o-rwx" #0440
+
+  - name: cleanup temp file
+    file:
+      path: "/tmp/sudoers_{{ login_user }}.edit"
+      state: absent
+
+  become: true
+
+- name: deploy ssh key for login user
+  authorized_key:
+    user: "{{ login_user }}"
+    key: "{{ lookup('file', '{{ login_user_pubkey }}') }}"
+    state: present
+  become: true
+  when: using_vagrant
+

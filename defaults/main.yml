@@ -1,13 +1,13 @@
 ---
 
-project:                  "anseedble"
 # dev || stage || prod
 environ:                  "dev"
 debugging:                true
-use_master_user:          false
 deprivilege_deploy_user:  false
 login_user:               "deploy"
-local_pki_directory:      "~/.ssh"
+remote_user:              "jgara1"
+local_ssh_directory:      "~/.ssh"
+login_user_pubkey:         "{{ local_ssh_directory }}/id_rsa.pub"
 project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
 
 create_login_user:        false
@@ -33,9 +33,8 @@ login_user_ssh_template:  'ssh_config.j2'
 # login_group_gid:          1001
 # login_group:              "{{ login_user }}"
 
-login_user_grant_sudo:            true
-login_user_passwwordless_sudo:    false
-login_user_sudoers:               "" # defaults to "ALL=(ALL) PASSWD: ALL"
+login_user_passwordless_sudo:     true
+login_group_sudoers:               "" # defaults to "ALL=(ALL) PASSWD: ALL"
 
 # NOTE: additional aliases for ssh config.
 # hostvars[item]['inventory_hostname'] and project-environ are included by default
