@@ -1,41 +1,5 @@
 ---
 
-# dev || stage || prod
-environ:                  "dev"
-debugging:                true
-deprivilege_deploy_user:  false
-login_user:               "deploy"
-remote_user:              "jgara1"
-local_ssh_directory:      "~/.ssh"
-login_user_pubkey:         "{{ local_ssh_directory }}/id_rsa.pub"
-project_pki_subdirectory: "{{ local_pki_directory }}/{{ project }}"
-
-create_login_user:        false
-create_login_user_key:    true
-login_user_key:           "{{ project }}_{{ environ }}"
-login_user_passphrase:    ""
-identity_file:            "{{ project_pki_subdirectory }}/{{ login_user_key }}"
-# how to get from *the playbook that calls this role* to the project root
-login_user_relative_path_to_root:   ""
-login_user_path_to_vars:  "{{ login_user_relative_path_to_root }}inventory/group_vars/{{ environ }}"
-login_user_vars_file:     "{{ login_user_path_to_vars }}/vars.yml"
-login_user_vault_file:    "{{ login_user_path_to_vars }}/vault.yml"
-# rsa, dsa, ecdsa, or ed25519
-key_type:                 "rsa"
-# key size in bits. e.g. 2048, 4096, or 15360 (15k) for rsa
-# must match type if using ed25519, etc
-key_size:                 4096
-
-create_ssh_config_entry:  true
-login_user_ssh_template:  'ssh_config.j2'
-
-# login_user_uid:           1001
-# login_group_gid:          1001
-# login_group:              "{{ login_user }}"
-
-login_user_passwordless_sudo:     true
-login_group_sudoers:               "" # defaults to "ALL=(ALL) PASSWD: ALL"
-
-# NOTE: additional aliases for ssh config.
-# hostvars[item]['inventory_hostname'] and project-environ are included by default
-ssh_aliases: []
+using_vagrant:            true
+sshkey_dir:               "~/.ssh"
+sshkey_name:              "id_rsa.pub"

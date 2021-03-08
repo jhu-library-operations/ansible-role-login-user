@@ -1,21 +1,18 @@
 galaxy_info:
-  author: Drew Heles
-  description: sets up initial user for automation
+  author:
+  description:
 
   license: CC0
-
-  min_ansible_version: 2.4
 
   platforms:
   - name: EL
     versions:
-    - 6
     - 7
 
   galaxy_tags:
-  - ssh
-  - key
-  - user
+    #  - ssh
+    #  - key
+    #  - user
 
 dependencies: []
   # List your role dependencies here, one per line.

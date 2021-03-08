@@ -6,21 +6,32 @@ So far, only tested for https://github.com/jhu-library-applications/catalyst-ans
 What it does if {{ using_vagrant }} == true:
 1. Creates {{ login_group }}.
 2. Creates {{ login_user }}.
-3. Installs ~/.ssh/id_rsa.pub for {{ login_user }}.
+3. Installs {{ sshkey_dir }}/{{ sshkey_name }} or {{ login_user }}.
 4. Configures passwordless sudo for {{ login_user }}.
 
 Requirements
 ------------
-1. Assumes that ~/.ssh/id_rsa.pub exists.
-2. It is necessary to first edit catalyst-ansible/setup.yml similar to this:
+1. Assumes that SSH key pair exists. E.g. ~/.ssh/id_rsa and id_rsa.pub
+2. ~/.ansible.ini file similar to this:
+```
+[cross-project]
+remote_user = jgara1
+login_user  = jgara1
+login_group = msel-operations
+
+[dev]
+remote_user = jgara1
+login_user  = jgara1
+login_group = msel-operations
+```
+3. catalyst-ansible/setup.yml file like this:
 ```---
 - name: create login user for installation & configuration
   hosts: all
 
   vars:
-    remote_user: jgara1
-    login_user: jgara1
-    login_group: msel-operations
+    sshkey_dir: "~/.ssh"
+    sshkey_name: "id_rsa.pub"
     using_vagrant: true
 
   roles:
@@ -36,34 +47,27 @@ Role Variables
 
       Signal that we are deploying to vagrant.
       
-3. ```login_user: "<jhedid>"```
+3. ```login_user: "<jhedid>" & login_group: "<jhed-group>"```
 
-      User account to be created. Given passwordless sudo and ssh access via ssh key authentication. Used for installing and configuring software on the server. Expected to be distinct from application service account (e.g. tomcat, apache, catalyst, etc.).
+      User account to be created. Pulled from ~/.ansible.ini. Used for installing and configuring software on the server. Expected to be distinct from application service account (e.g. tomcat, apache, catalyst, etc.).
+      Example ~/.ansible.ini file:
+```
+[cross-project]
+remote_user = jgara1
+login_user  = jgara1
+login_group = msel-operations
 
-1. ```local_ssh_directory: "~/.ssh"```
+[dev]
+remote_user = jgara1
+login_user  = jgara1
+login_group = msel-operations
+```
+
+1. ```sshkey_dir: "~/.ssh"```
 
       Location of ssh config file on the control machine.
 
-1. ```login_user_passwordless_sudo: true```
-
-      Flag for granting login user passwordless sudo.
-
-1. ```login_user_sudoers: ""```
-
-      Entry in sudoers file for login user. Defaults to `ALL=(ALL) PASSWD: ALL`.
-
-1. Optional Vars:
-
-```
-       login_user_uid:           1001
-       login_group_gid:          1001
-```
-
-      Optional UID and GID for login user and group
-
-1. ```# login_group:              "{{ login_user }}"```
-
-      Optional group for login user. Will be created if provided & does not already exist.
+1. ```sshkey_name: "id_rsa.pub"```
 
 
 Dependencies
