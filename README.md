@@ -47,7 +47,7 @@ Role Variables
 
       Signal that we are deploying to vagrant.
       
-3. ```login_user: "<jhedid>" & login_group: "<jhed-group>"```
+2. ```login_user: "<jhedid>" & login_group: "<jhed-group>"```
 
       User account to be created. Pulled from ~/.ansible.ini. Used for installing and configuring software on the server. Expected to be distinct from application service account (e.g. tomcat, apache, catalyst, etc.).
       Example ~/.ansible.ini file:
@@ -63,11 +63,11 @@ login_user  = jgara1
 login_group = msel-operations
 ```
 
-1. ```sshkey_dir: "~/.ssh"```
+3. ```sshkey_dir: "~/.ssh"```
 
-      Location of ssh config file on the control machine.
+      Location of ssh keys.
 
-1. ```sshkey_name: "id_rsa.pub"```
+4. ```sshkey_name: "id_rsa.pub"```
 
 
 Dependencies
