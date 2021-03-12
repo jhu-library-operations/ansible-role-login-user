@@ -1,6 +1,17 @@
----
 # Assumptions:
 # - Vagrant setup
+#
+---
+
+- name: "Check if PBIS is installed "
+  ansible.builtin.stat:
+    path: "/opt/pbis/bin/domainjoin-cli"
+  register: pbis
+
+- name:
+  ansible.builtin.fail:
+    msg: "PBIS is installed. This does not appear to be a vagrant setup. Exiting!"
+  when: pbis.stat.exists
 
 - name: "Add login user's group."
   group:

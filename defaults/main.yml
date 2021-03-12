@@ -1,6 +1,6 @@
 ---
 
-using_vagrant:            true
+using_vagrant:            false
 sshkey_dir:               "~/.ssh"
 sshkey_name:              "id_rsa.pub"
 #login_user:
