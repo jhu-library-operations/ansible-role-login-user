@@ -8,7 +8,6 @@
     gid:  "{{ login_group_gid | default(omit) }}"
     state: present
   become: true
-  when: using_vagrant
 
 - name: "Add login user."
   user:
@@ -17,7 +16,6 @@
     uid:    "{{ login_user_uid | default(omit) }}"
     group:  "{{ login_group | default(omit)  }}"
   become: true
-  when: using_vagrant
 
 - name: "Upload ssh key for login user."
   authorized_key:
@@ -25,7 +23,6 @@
     key: "{{ lookup('file', '{{ sshkey_dir }}/{{ sshkey_name }}') }}"
     state: present
   become: true
-  when: using_vagrant
 
 - name: configure sudo
   ansible.builtin.lineinfile:
@@ -37,6 +34,5 @@
     group: root
     mode: '0440'
   become: true
-  when: using_vagrant
 
 ...
