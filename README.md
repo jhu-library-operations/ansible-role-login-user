@@ -4,10 +4,13 @@
 So far, only tested for https://github.com/jhu-library-applications/catalyst-ansible when using vagrant.
 
 What it does if {{ using_vagrant }} == true:
-1. Creates {{ login_group }}.
-2. Creates {{ login_user }}.
-3. Installs {{ sshkey_dir }}/{{ sshkey_name }} or {{ login_user }}.
+1. Adds group {{ login_group }}.
+2. Adds user {{ login_user }}.
+3. Installs {{ sshkey_dir }}/{{ sshkey_name }} for {{ login_user }}.
 4. Configures passwordless sudo for {{ login_user }}.
+
+What it does if {{ using_vagrant }} == false:
+1. Absolutely nothing.
 
 Requirements
 ------------
@@ -87,9 +90,8 @@ Example Playbook
 License
 -------
 
-CC0
 
 Author Information
 ------------------
 
-
+J. Gara
